@@ -2,66 +2,65 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>🚗 BLE Car Joystick</title>
-
-<!-- NippleJS (joystick library) -->
 <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
 <style>
-body {
+html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #4e54c8, #8f94fb);
-  height: 100vh;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-  color: white;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  padding: 0 5vw;
+  box-sizing: border-box;
 }
 
 #joystick {
-  width: 45vw;
-  height: 45vw;
-  max-width: 400px;
-  max-height: 400px;
-  background: rgba(255,255,255,0.1);
+  width: 40vw;
+  height: 40vw;
+  max-width: 320px;
+  max-height: 320px;
+  background: rgba(255,255,255,0.08);
   border-radius: 50%;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .panel {
-  width: 40vw;
-  max-width: 400px;
+  width: 45vw;
+  max-width: 420px;
   text-align: center;
 }
 
-button {
-  padding: 15px 20px;
-  border: none;
-  border-radius: 10px;
-  margin: 10px 0;
-  width: 100%;
-  font-size: 1.2em;
+h2 {
   color: white;
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-}
-
-button:active {
-  background: rgba(255,255,255,0.4);
+  margin-bottom: 10px;
 }
 
 .status {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   margin-bottom: 10px;
   gap: 10px;
+  color: white;
 }
 
 .status-dot {
@@ -78,7 +77,25 @@ button:active {
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.6; }
+}
+
+button {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  margin: 8px 0;
+  width: 100%;
+  font-size: 1.1em;
+  color: white;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:active {
+  background: rgba(255,255,255,0.4);
 }
 
 .log {
@@ -86,29 +103,32 @@ button:active {
   background: rgba(0,0,0,0.3);
   border-radius: 10px;
   padding: 10px;
-  height: 150px;
+  height: 120px;
   overflow-y: auto;
   font-family: monospace;
-  font-size: 0.9em;
+  font-size: 0.85em;
+  color: white;
 }
 </style>
 </head>
 <body>
 
-<div id="joystick"></div>
+<div class="container">
+  <div id="joystick"></div>
 
-<div class="panel">
-  <h2>🚗 BLE Car Control</h2>
-  <div class="status">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">Chưa kết nối</span>
+  <div class="panel">
+    <h2>🚗 BLE Car Control</h2>
+    <div class="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Chưa kết nối</span>
+    </div>
+
+    <button id="connectBtn" onclick="connectBLE()">📡 Kết nối Bluetooth</button>
+    <button onclick="setMode('manual')" id="manualBtn" class="active">🎮 Thủ công</button>
+    <button onclick="setMode('auto')" id="autoBtn">🤖 Tự động</button>
+
+    <div class="log" id="logContainer"></div>
   </div>
-
-  <button id="connectBtn" onclick="connectBLE()">📡 Kết nối Bluetooth</button>
-  <button onclick="setMode('manual')" id="manualBtn" class="active">🎮 Thủ công</button>
-  <button onclick="setMode('auto')" id="autoBtn">🤖 Tự động</button>
-
-  <div class="log" id="logContainer"></div>
 </div>
 
 <script>
