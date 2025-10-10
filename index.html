@@ -1,425 +1,206 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🚗 Điều Khiển Xe RC</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚗 BLE Car Joystick</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            color: white;
-        }
+<!-- NippleJS (joystick library) -->
+<script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
-        .container {
-            max-width: 500px;
-            width: 100%;
-        }
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #4e54c8, #8f94fb);
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  color: white;
+  overflow: hidden;
+}
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+#joystick {
+  width: 45vw;
+  height: 45vw;
+  max-width: 400px;
+  max-height: 400px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+.panel {
+  width: 40vw;
+  max-width: 400px;
+  text-align: center;
+}
 
-        .status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-size: 1.1em;
-            padding: 10px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
+button {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  margin: 10px 0;
+  width: 100%;
+  font-size: 1.2em;
+  color: white;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
 
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ff4444;
-            animation: pulse 2s infinite;
-        }
+button:active {
+  background: rgba(255,255,255,0.4);
+}
 
-        .status-dot.connected {
-            background: #44ff44;
-        }
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+.status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff4444;
+  animation: pulse 2s infinite;
+}
 
-        .connect-btn {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-            border: none;
-            border-radius: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            cursor: pointer;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
+.status-dot.connected {
+  background: #44ff44;
+}
 
-        .connect-btn:hover {
-            transform: translateY(-2px);
-        }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 
-        .connect-btn:active {
-            transform: translateY(0);
-        }
-
-        .mode-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .mode-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid white;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .mode-btn.active {
-            background: white;
-            color: #667eea;
-        }
-
-        .controls {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .d-pad {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .control-btn {
-            width: 100%;
-            aspect-ratio: 1;
-            border: none;
-            border-radius: 15px;
-            background: rgba(255,255,255,0.3);
-            color: white;
-            font-size: 2em;
-            cursor: pointer;
-            transition: all 0.1s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .control-btn:active {
-            transform: scale(0.95);
-            background: rgba(255,255,255,0.5);
-        }
-
-        .control-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .btn-up { grid-column: 2; grid-row: 1; }
-        .btn-left { grid-column: 1; grid-row: 2; }
-        .btn-stop { grid-column: 2; grid-row: 2; background: rgba(255,100,100,0.5); }
-        .btn-right { grid-column: 3; grid-row: 2; }
-        .btn-down { grid-column: 2; grid-row: 3; }
-
-        .info {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-
-        .log {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-        }
-
-        .log-entry {
-            margin: 5px 0;
-            padding: 5px;
-            border-left: 3px solid rgba(255,255,255,0.3);
-            padding-left: 10px;
-        }
-
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 2em;
-            }
-            .control-btn {
-                font-size: 1.5em;
-            }
-        }
-    </style>
+.log {
+  text-align: left;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  padding: 10px;
+  height: 150px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚗 Xe RC Bluetooth</h1>
-            <div class="status">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Chưa kết nối</span>
-            </div>
-        </div>
 
-        <button class="connect-btn" id="connectBtn" onclick="connectBLE()">
-            📡 Kết nối Bluetooth
-        </button>
+<div id="joystick"></div>
 
-        <div class="mode-selector">
-            <button class="mode-btn active" id="manualBtn" onclick="setMode('manual')">
-                🎮 Thủ công
-            </button>
-            <button class="mode-btn" id="autoBtn" onclick="setMode('auto')">
-                🤖 Tự động
-            </button>
-        </div>
+<div class="panel">
+  <h2>🚗 BLE Car Control</h2>
+  <div class="status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Chưa kết nối</span>
+  </div>
 
-        <div class="controls">
-            <div class="d-pad">
-                <button class="control-btn btn-up" onpointerdown="sendCommand('F')" onpointerup="sendCommand('S')" disabled>
-                    ⬆️
-                </button>
-                <button class="control-btn btn-left" onpointerdown="sendCommand('L')" onpointerup="sendCommand('S')" disabled>
-                    ⬅️
-                </button>
-                <button class="control-btn btn-stop" onclick="sendCommand('S')" disabled>
-                    🛑
-                </button>
-                <button class="control-btn btn-right" onpointerdown="sendCommand('R')" onpointerup="sendCommand('S')" disabled>
-                    ➡️
-                </button>
-                <button class="control-btn btn-down" onpointerdown="sendCommand('B')" onpointerup="sendCommand('S')" disabled>
-                    ⬇️
-                </button>
-            </div>
-            
-            <div class="info">
-                Giữ nút để di chuyển, thả ra để dừng
-            </div>
-        </div>
+  <button id="connectBtn" onclick="connectBLE()">📡 Kết nối Bluetooth</button>
+  <button onclick="setMode('manual')" id="manualBtn" class="active">🎮 Thủ công</button>
+  <button onclick="setMode('auto')" id="autoBtn">🤖 Tự động</button>
 
-        <div class="log" id="logContainer"></div>
-    </div>
+  <div class="log" id="logContainer"></div>
+</div>
 
-    <script>
-        let bleDevice = null;
-        let bleCharacteristic = null;
-        let currentMode = 'manual';
+<script>
+let bleDevice, bleCharacteristic;
+let currentMode = 'manual';
+const UART_SERVICE_UUID = 0xFFE0;
+const UART_CHAR_UUID = 0xFFE1;
 
-        // UUID cho UART service (giống code Pico của bạn)
-        const UART_SERVICE_UUID = 0xFFE0;
-        const UART_CHAR_UUID = 0xFFE1;
+function log(msg) {
+  const box = document.getElementById('logContainer');
+  const time = new Date().toLocaleTimeString('vi-VN');
+  box.innerHTML = `[${time}] ${msg}<br>` + box.innerHTML;
+}
 
-        function log(message) {
-            const logContainer = document.getElementById('logContainer');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            const time = new Date().toLocaleTimeString('vi-VN');
-            entry.textContent = `[${time}] ${message}`;
-            logContainer.insertBefore(entry, logContainer.firstChild);
-            
-            // Giữ tối đa 10 dòng log
-            while (logContainer.children.length > 10) {
-                logContainer.removeChild(logContainer.lastChild);
-            }
-        }
+function updateConnectionStatus(connected) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  const btn = document.getElementById('connectBtn');
+  if (connected) {
+    dot.classList.add('connected');
+    txt.textContent = 'Đã kết nối';
+    btn.textContent = '✅ Đã kết nối';
+    btn.disabled = true;
+  } else {
+    dot.classList.remove('connected');
+    txt.textContent = 'Chưa kết nối';
+    btn.textContent = '📡 Kết nối Bluetooth';
+    btn.disabled = false;
+  }
+}
 
-        async function connectBLE() {
-            try {
-                log('🔍 Đang tìm kiếm thiết bị...');
-                
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ namePrefix: 'PicoW' }],
-                    optionalServices: [UART_SERVICE_UUID]
-                });
+async function connectBLE() {
+  try {
+    log('🔍 Đang tìm thiết bị...');
+    bleDevice = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: 'PicoW' }],
+      optionalServices: [UART_SERVICE_UUID]
+    });
+    const server = await bleDevice.gatt.connect();
+    const service = await server.getPrimaryService(UART_SERVICE_UUID);
+    bleCharacteristic = await service.getCharacteristic(UART_CHAR_UUID);
+    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+    updateConnectionStatus(true);
+    log('✅ Kết nối thành công!');
+  } catch (e) {
+    log('❌ ' + e);
+  }
+}
 
-                log('📡 Đang kết nối...');
-                const server = await bleDevice.gatt.connect();
-                
-                log('🔎 Đang tìm service...');
-                const service = await server.getPrimaryService(UART_SERVICE_UUID);
-                
-                log('📝 Đang lấy characteristic...');
-                bleCharacteristic = await service.getCharacteristic(UART_CHAR_UUID);
+function onDisconnected() {
+  updateConnectionStatus(false);
+  bleCharacteristic = null;
+  log('❌ Mất kết nối');
+}
 
-                // Xử lý khi mất kết nối
-                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+async function sendCommand(cmd) {
+  if (!bleCharacteristic) return;
+  await bleCharacteristic.writeValue(new TextEncoder().encode(cmd));
+  log('📤 ' + cmd);
+}
 
-                updateConnectionStatus(true);
-                log('✅ Kết nối thành công!');
-                
-                // Gửi lệnh chế độ thủ công ban đầu
-                sendCommand('w');
-                
-            } catch (error) {
-                log('❌ Lỗi: ' + error);
-                updateConnectionStatus(false);
-            }
-        }
+function setMode(mode) {
+  currentMode = mode;
+  if (mode === 'manual') sendCommand('w');
+  else sendCommand('W');
+  log(mode === 'manual' ? '🎮 Manual mode' : '🤖 Auto mode');
+}
 
-        function onDisconnected() {
-            log('❌ Mất kết nối!');
-            updateConnectionStatus(false);
-            bleCharacteristic = null;
-        }
+// === JOYSTICK ===
+const joystick = nipplejs.create({
+  zone: document.getElementById('joystick'),
+  mode: 'static',
+  position: { left: '50%', top: '50%' },
+  color: 'white'
+});
 
-        function updateConnectionStatus(connected) {
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            const controlBtns = document.querySelectorAll('.control-btn');
-            const connectBtn = document.getElementById('connectBtn');
+joystick.on('move', (evt, data) => {
+  if (!bleCharacteristic || currentMode !== 'manual') return;
+  if (data.direction) {
+    let dir = data.direction.angle;
+    if (dir === 'up') sendCommand('F');
+    if (dir === 'down') sendCommand('B');
+    if (dir === 'left') sendCommand('L');
+    if (dir === 'right') sendCommand('R');
+  }
+});
+joystick.on('end', () => {
+  if (currentMode === 'manual') sendCommand('S');
+});
 
-            if (connected) {
-                statusDot.classList.add('connected');
-                statusText.textContent = 'Đã kết nối';
-                connectBtn.textContent = '✅ Đã kết nối';
-                connectBtn.disabled = true;
-                controlBtns.forEach(btn => btn.disabled = false);
-            } else {
-                statusDot.classList.remove('connected');
-                statusText.textContent = 'Chưa kết nối';
-                connectBtn.textContent = '📡 Kết nối Bluetooth';
-                connectBtn.disabled = false;
-                controlBtns.forEach(btn => btn.disabled = true);
-            }
-        }
+log('📱 Giao diện joystick sẵn sàng!');
+</script>
 
-        async function sendCommand(cmd) {
-            if (!bleCharacteristic) {
-                log('⚠️ Chưa kết nối!');
-                return;
-            }
-
-            try {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(cmd);
-                await bleCharacteristic.writeValue(data);
-                
-                const cmdNames = {
-                    'F': '⬆️ Tiến',
-                    'B': '⬇️ Lùi',
-                    'L': '⬅️ Trái',
-                    'R': '➡️ Phải',
-                    'S': '🛑 Dừng',
-                    'W': '🤖 Auto',
-                    'w': '🎮 Manual'
-                };
-                
-                if (cmdNames[cmd]) {
-                    log(cmdNames[cmd]);
-                }
-            } catch (error) {
-                log('❌ Lỗi gửi lệnh: ' + error);
-            }
-        }
-
-        function setMode(mode) {
-            currentMode = mode;
-            const manualBtn = document.getElementById('manualBtn');
-            const autoBtn = document.getElementById('autoBtn');
-            const controlBtns = document.querySelectorAll('.control-btn');
-
-            if (mode === 'manual') {
-                manualBtn.classList.add('active');
-                autoBtn.classList.remove('active');
-                controlBtns.forEach(btn => btn.disabled = !bleCharacteristic);
-                sendCommand('w'); // Gửi lệnh chế độ manual
-                log('🎮 Chuyển sang chế độ Thủ công');
-            } else {
-                manualBtn.classList.remove('active');
-                autoBtn.classList.add('active');
-                controlBtns.forEach(btn => btn.disabled = true);
-                sendCommand('W'); // Gửi lệnh chế độ auto
-                log('🤖 Chuyển sang chế độ Tự động');
-            }
-        }
-
-        // Hỗ trợ bàn phím
-        document.addEventListener('keydown', (e) => {
-            if (!bleCharacteristic || currentMode !== 'manual') return;
-            
-            switch(e.key.toLowerCase()) {
-                case 'w':
-                case 'arrowup':
-                    sendCommand('F');
-                    break;
-                case 's':
-                case 'arrowdown':
-                    sendCommand('B');
-                    break;
-                case 'a':
-                case 'arrowleft':
-                    sendCommand('L');
-                    break;
-                case 'd':
-                case 'arrowright':
-                    sendCommand('R');
-                    break;
-                case ' ':
-                    sendCommand('S');
-                    break;
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (!bleCharacteristic || currentMode !== 'manual') return;
-            
-            if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) {
-                sendCommand('S');
-            }
-        });
-
-        // Khởi tạo
-        log('📱 App đã sẵn sàng!');
-        log('💡 Nhấn "Kết nối Bluetooth" để bắt đầu');
-    </script>
 </body>
 </html>
